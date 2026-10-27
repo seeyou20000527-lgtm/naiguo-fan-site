@@ -62,6 +62,7 @@ create table if not exists public.fan_submissions (
 );
 alter table public.fan_submissions enable row level security;
 grant insert on public.fan_submissions to anon, authenticated;
+grant select on public.fan_submissions to anon, authenticated;
 grant select, update, delete on public.fan_submissions to authenticated;
 drop policy if exists "fans submit pending works" on public.fan_submissions;
 create policy "fans submit pending works" on public.fan_submissions for insert to anon, authenticated with check (status = 'pending');
@@ -89,3 +90,5 @@ drop policy if exists "admins manage submitted artwork" on storage.objects;
 create policy "admins manage submitted artwork" on storage.objects for all to authenticated using (
   bucket_id = 'fan-submissions' and exists(select 1 from public.admin_users where user_id = auth.uid())
 ) with check (bucket_id = 'fan-submissions' and exists(select 1 from public.admin_users where user_id = auth.uid()));
+
+
