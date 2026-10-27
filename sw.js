@@ -1,4 +1,4 @@
-const CACHE = "naiguo-app-v6";
+const CACHE = "naiguo-app-v7";
 const CORE = [
   "./index.html",
   "./manifest.webmanifest",
