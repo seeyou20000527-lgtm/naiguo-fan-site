@@ -1,4 +1,4 @@
-const CACHE = "naiguo-app-v11";
+const CACHE = "naiguo-app-v13";
 const CORE = [
   "./index.html",
   "./admin-config.js",
@@ -27,3 +27,4 @@ self.addEventListener("fetch", event => {
   }
   event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 });
+
