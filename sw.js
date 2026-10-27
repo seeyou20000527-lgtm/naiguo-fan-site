@@ -1,4 +1,4 @@
-const CACHE = "naiguo-app-v8";
+const CACHE = "naiguo-app-v9";
 const CORE = [
   "./index.html",
   "./admin-config.js",
@@ -20,7 +20,8 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
-  if (request.mode === "navigate") {
+  const url = new URL(request.url);
+  if (request.mode === "navigate" && (url.pathname.endsWith("/") || url.pathname.endsWith("/index.html"))) {
     event.respondWith(caches.match("./index.html").then(cached => cached || fetch(request)));
     return;
   }
