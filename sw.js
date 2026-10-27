@@ -1,6 +1,8 @@
-const CACHE = "naiguo-app-v7";
+const CACHE = "naiguo-app-v8";
 const CORE = [
   "./index.html",
+  "./admin-config.js",
+  "./public-data.js",
   "./manifest.webmanifest",
   "./assets/app-icon.png",
   "./assets/icon-192.png",
@@ -24,5 +26,3 @@ self.addEventListener("fetch", event => {
   }
   event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 });
-
-
