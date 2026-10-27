@@ -18,6 +18,8 @@ create table if not exists public.site_settings (
   tagline text not null default '',
   bio text not null default '',
   stream_label text not null default '',
+  stream_days integer[] not null default ARRAY[1,2,3,4,5],
+  stream_time time not null default '21:00',
   social_url text not null default '',
   updated_at timestamptz not null default now()
 );

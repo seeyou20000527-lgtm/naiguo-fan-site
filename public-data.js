@@ -3,10 +3,11 @@
   const cfg=window.NAIGUO_SUPABASE||{};
   if(!cfg.url||!cfg.anonKey||!window.supabase)return;
   const db=window.supabase.createClient(cfg.url,cfg.anonKey);
+  let weeklyDays=[1,2,3,4,5],weeklyTime='21:00',eventData=[];
   try{
     const {data:events,error}=await db.from('stream_events').select('id,event_date,event_time,title,description,is_published').eq('is_published',true).order('event_date',{ascending:true});
     if(error)throw error;
-    renderEvents(events||[]);
+    eventData=events||[];renderEvents(eventData);
   }catch(error){console.warn('奶鍋行程資料暫時無法載入',error)}
   try{
     const {data,error}=await db.from('site_settings').select('*').eq('id','main').maybeSingle();
@@ -25,16 +26,21 @@
       const weekdays=['日','一','二','三','四','五','六'];
       const monthEvents=events.filter(e=>{const d=new Date(`${e.event_date}T00:00:00`);return d.getFullYear()===year&&d.getMonth()===month});
       const byDay=new Map(monthEvents.map(e=>[Number(e.event_date.slice(8,10)),e]));
-      grid.innerHTML=weekdays.map(d=>`<div class="weekday">${d}</div>`).join('')+Array.from({length:first},()=>'<div class="day dim"></div>').join('')+Array.from({length:count},(_,i)=>{const d=i+1,weekday=new Date(year,month,d).getDay(),event=byDay.get(d),live=weekday>=1&&weekday<=5||Boolean(event);return `<div class="day ${live?'marked':''} ${event?'special':''}">${d}${event?`<small>${escapeHtml(event.title)}</small>`:''}</div>`}).join('');
-      if(special){special.innerHTML=monthEvents.length?monthEvents.map(e=>`<span>🎃</span><div><strong>${String(e.event_date).slice(5).replace('-','/')}・${escapeHtml(e.title)}</strong><small>${escapeHtml((e.event_time||'21:00').slice(0,5))} 開播${e.description?'，'+escapeHtml(e.description):''}</small></div><b>特別直播</b>`).join(''):'<span>✧</span><div><strong>本月尚未公布特別直播</strong><small>每週一至週五晚上 21:00 固定開播</small></div>'}
+      grid.innerHTML=weekdays.map(d=>`<div class="weekday">${d}</div>`).join('')+Array.from({length:first},()=>'<div class="day dim"></div>').join('')+Array.from({length:count},(_,i)=>{const d=i+1,weekday=new Date(year,month,d).getDay(),event=byDay.get(d),live=weeklyDays.includes(weekday)||Boolean(event);return `<div class="day ${live?'marked':''} ${event?'special':''}">${d}${event?`<small>${escapeHtml(event.title)}</small>`:''}</div>`}).join('');
+      if(special){special.innerHTML=monthEvents.length?monthEvents.map(e=>`<span>🎃</span><div><strong>${String(e.event_date).slice(5).replace('-','/')}・${escapeHtml(e.title)}</strong><small>${escapeHtml((e.event_time||weeklyTime).slice(0,5))} 開播${e.description?'，'+escapeHtml(e.description):''}</small></div><b>特別直播</b>`).join(''):'<span>✧</span><div><strong>本月尚未公布特別直播</strong><small>固定直播時間：'+escapeHtml(weeklyTime)+'</small></div>'}
     }
     document.querySelectorAll('#calendar [data-month]').forEach(nav=>nav.onclick=()=>{month+=Number(nav.dataset.month);if(month<0){month=11;year--}if(month>11){month=0;year++}draw()});
     draw();
   }
   function renderSettings(s){
+    weeklyDays=Array.isArray(s.stream_days)?s.stream_days:[1,2,3,4,5];weeklyTime=(s.stream_time||'21:00').slice(0,5);renderEvents(eventData);
     const profile=document.querySelector('#profile .hero-copy');
     if(profile){const eyebrow=profile.querySelector('.eyebrow'),bio=profile.querySelector('p');if(eyebrow)eyebrow.textContent=`✿ 嗨，我是${s.profile_name||'奶鍋'}`;if(bio&&s.bio)bio.textContent=s.bio}
-    const tagline=document.querySelector('.side .tagline');if(tagline&&s.profile_name)tagline.textContent=`${s.profile_name}的秘密基地`;
+    const sideTagline=document.querySelector('.side .tagline');if(sideTagline&&s.profile_name)sideTagline.textContent=`${s.profile_name}的秘密基地`;
+    const tagline=document.querySelector('#profile .section-head p');if(tagline&&s.tagline)tagline.textContent=s.tagline;
+    const schedule=document.querySelector('#home .schedule-pill');if(schedule)schedule.textContent=`✦ 固定直播　${weeklyDays.map(d=>['日','一','二','三','四','五','六'][d]).join('、')}・${weeklyTime}`;
+    const streamTime=document.querySelector('#calendar .recurring-card .weekly-time');if(streamTime)streamTime.innerHTML=`${escapeHtml(weeklyTime)}<span>每週${weeklyDays.map(d=>['日','一','二','三','四','五','六'][d]).join('、')}</span>`;
+    const dayList=document.querySelector('#calendar .weekday-list');if(dayList)dayList.innerHTML=weeklyDays.map(d=>`<div><b>週${['日','一','二','三','四','五','六'][d]}</b><span>${escapeHtml(weeklyTime)}</span></div>`).join('');
     const socials=document.querySelector('#profile .grid .card:last-child p');
     if(socials&&s.social_url){let url;try{url=new URL(s.social_url)}catch{}if(url&&['http:','https:'].includes(url.protocol))socials.innerHTML=`${escapeHtml(s.stream_label||'直播')}　・　<a href="${url.href}" target="_blank" rel="noopener noreferrer">前往奶鍋社群 ↗</a>`}
   }
