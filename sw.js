@@ -1,4 +1,4 @@
-const CACHE = "naiguo-app-v10";
+const CACHE = "naiguo-app-v11";
 const CORE = [
   "./index.html",
   "./admin-config.js",
