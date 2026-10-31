@@ -5,6 +5,19 @@
   const db=window.supabase.createClient(cfg.url,cfg.anonKey);
   let weeklyDays=[1,2,3,4,5],weeklyTime='21:00',eventData=[];
   try{
+    const {data:materials,error}=await db.from('site_materials').select('id,name,file_name,description,storage_path,content_type').eq('is_published',true).order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+    if(error)throw error;
+    const cards=await Promise.all((materials||[]).map(async item=>{
+      const {data:preview}=await db.storage.from('official-materials').createSignedUrl(item.storage_path,3600);
+      if(!preview?.signedUrl)return '';
+      const downloadUrl=preview.signedUrl+'&download='+encodeURIComponent(item.file_name);
+      const image=item.content_type.startsWith('image/');
+      return `<article class="material-card"><div class="material-preview ${item.name.includes('Logo')?'logo-preview':''}">${image?`<img src="${preview.signedUrl}" alt="${escapeHtml(item.name)}">`:'<span style="font-size:48px">📄</span>'}</div><div class="material-copy"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.description||item.file_name)}</span><a class="download-btn" href="${downloadUrl}">下載素材　↓</a></div></article>`;
+    }));
+    const root=document.getElementById('materials-grid');
+    if(root)root.innerHTML=cards.filter(Boolean).join('')||'<p class="hint">目前沒有上架物料，之後會在這裡更新喔。</p>';
+  }catch(error){console.warn('官方物料暫時無法載入',error);const root=document.getElementById('materials-grid');if(root)root.innerHTML='<p class="hint">物料暫時無法載入，請稍後再試。</p>'}
+  try{
     const {data:events,error}=await db.from('stream_events').select('id,event_date,event_time,title,description,is_published').eq('is_published',true).order('event_date',{ascending:true});
     if(error)throw error;
     eventData=events||[];renderEvents(eventData);
